@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!--
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Html.html to edit this template
+-->
+<html>
+    <head>
+        <title>FinanceFlow User Homepage</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <h1>Welcome!</h1>
+        <p>Below are two forms for inserting a new income or expense!</p>
+        <div>
+            <form action="DataServlet" method="post">
+                <input type="hidden" name="call" value="transaction">
+                <input type="hidden" name="type" value="income">
+                Insert new income: <input type="number" step="0.01" name="amt"> <br>
+                <input type="submit" value="Add Income">
+            </form>
+            <form action="DataServlet" method="post">
+                <input type="hidden" name="call" value="transaction">
+                <input type="hidden" name="type" value="expense">
+                Insert new expense: <input type="number" step="0.01" name="amt"/> <br>
+                <input type="submit" value="Add Expense">
+            </form>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,16 @@
+CREATE DATABASE pff;
+
+USE pff;
+
+CREATE TABLE users (
+uid INT PRIMARY KEY AUTO_INCREMENT,
+name VARCHAR(50),
+pwd VARCHAR(50)
+);
+
+CREATE TABLE transactions (
+tid INT PRIMARY KEY AUTO_INCREMENT,
+uid INT NOT NULL,
+transactions_type ENUM('income', 'expenses') NOT NULL,
+FOREIGN KEY (uid) REFERENCES users(uid)
+);
