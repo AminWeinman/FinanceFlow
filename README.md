@@ -15,6 +15,7 @@ Currently this is the Backend portion of the project. Only PreparedStatements ar
 	enough as user info will be kept in one table and all transactions in the other.
 
 Database schema:
+
 users:
 - uid INT PRIMARY KEY AUTO_INCREMENT | unique id for each user
 - name VARCHAR(50) | username
