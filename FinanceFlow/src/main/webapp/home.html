@@ -1,8 +1,11 @@
+
 <!DOCTYPE html>
 <!--
 Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
 Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Html.html to edit this template
 -->
+
+
 <html>
     <head>
         <title>FinanceFlow User Homepage</title>
@@ -14,17 +17,40 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Html.html to edit thi
         <p>Below are two forms for inserting a new income or expense!</p>
         <div>
             <form action="DataServlet" method="post">
-                <input type="hidden" name="call" value="transaction">
-                <input type="hidden" name="type" value="income">
-                Insert new income: <input type="number" step="0.01" name="amt"> <br>
-                <input type="submit" value="Add Income">
+                <input type="hidden" name="call" value="addTransaction">
+                <h3>Input Transaction</h3>
+                <label for="amt">Amount:</label>
+                <input type="number" step="0.01" name="amt" id="amt" required>
+
+                <label for="desc">Description:</label>
+                <input type="text" name="description" id="desc" required>
+
+                <label for="type">Transaction Type:</label>
+                <select name="transaction_type" id="type">
+                    <option value="income">Income</option>
+                    <option value="expenses">Expense</option>
+                </select>
+
+                <button type="submit">Submit</button>
             </form>
-            <form action="DataServlet" method="post">
-                <input type="hidden" name="call" value="transaction">
-                <input type="hidden" name="type" value="expense">
-                Insert new expense: <input type="number" step="0.01" name="amt"/> <br>
-                <input type="submit" value="Add Expense">
-            </form>
+            
+            <p>Total Income: $<span id="totalIncome">Loading...</span></p>
+            
+            <script>
+                window.addEventListener('load', () => {
+                    fetch('DataServlet')
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('totalIncome').textContent = data.totalIncome;
+                        })
+                        .catch(err => {
+                            console.error('Error fetching total income:', err);
+                            document.getElementById('totalIncome').textContent = 'Error';
+                        });
+                });
+                    
+            </script>
+
         </div>
     </body>
 </html>
