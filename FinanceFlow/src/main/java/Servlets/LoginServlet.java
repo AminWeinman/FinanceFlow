@@ -39,17 +39,7 @@ public class LoginServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/plain;charset=UTF-8");
-
-        try (PrintWriter out = response.getWriter()) {
-            out.println("test");
-            
-            try (Connection conn = DBUtil.getConnection()) {
-                out.println("SUCCESS: Connected to MySQL database!");
-            } catch (Exception e) {
-                throw new ServletException("FAILED TO CONNECT TO DATABASE\n" + e.getMessage(), e);
-            }
-        } 
+        return;
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -78,17 +68,38 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        String uname = request.getParameter("uname");
+        String pwd = request.getParameter("pwd");
+        int uid = -1;
+        
         try (Connection conn = DBUtil.getConnection()) {
+            String userQuery = "SELECT uid FROM users WHERE name = ?";
             String sql = "SELECT * FROM users WHERE name = ? AND pwd = ?";
             
+            
+            try (PreparedStatement a = conn.prepareStatement(userQuery)) {
+                a.setString(1, uname);
+                ResultSet rs = a.executeQuery();
+                
+                if (!rs.next()) {
+                    response.sendRedirect("index.html");
+                    return;
+                }
+                
+                uid = rs.getInt("uid");
+            }
+            
+            
             try (PreparedStatement s = conn.prepareStatement(sql)) {
-                s.setString(1, request.getParameter("uname"));
-                s.setString(2, request.getParameter("pwd"));
+                s.setString(1, uname);
+                s.setString(2, pwd);
                 
                 ResultSet rs = s.executeQuery();
                 
                 if (rs.next()) {
-                    request.getSession().setAttribute("user", request.getParameter("uname"));
+                    request.getSession().setAttribute("user", uname);
+                    request.getSession().setAttribute("uid", uid);
                     
                     response.sendRedirect("home.html");
                     return;
