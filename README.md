@@ -24,7 +24,9 @@ users:
 transactions:
 - tid INT PRIMARY KEY AUTO_INCREMENT | unique id for transactions if they need to be referenced later
 - uid INT NOT NULL | each transaction has the user's unique id to tie it to their account
-- transaction_type ENUM('income', 'expense') NOT NULL | keep track of type of transactions
+- transaction_type ENUM('income', 'expenses') NOT NULL | keep track of type of transactions
+- amt double,
+- description text,
 - FOREIGN KEY (uid) REFERENCES user(uid) | uid is our foreign key
 
 How to run:
