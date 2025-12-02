@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 /**
  *
@@ -63,7 +64,27 @@ public class DataServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        int uid = (int) request.getSession().getAttribute("uid");
+        double totalIncome = 0.0;
+        
+        String sql = "SELECT SUM(amt) AS total_income FROM transactions WHERE uid = ? and transactions_type = 'income'";
+        try (Connection conn = DBUtil.getConnection()) {
+            try (PreparedStatement s = conn.prepareStatement(sql)) {
+                s.setInt(1, uid);
+                ResultSet rs = s.executeQuery();
+                
+                if (rs.next()) {
+                    totalIncome = rs.getDouble("total_income");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (Exception ex) {
+            System.getLogger(DataServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+        
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"totalIncome\": " + totalIncome + "}");
     }
 
     /**
@@ -77,72 +98,65 @@ public class DataServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        handleTransaction(request, response);
+        String call = request.getParameter("call");
+        switch (call) {
+            case "addTransaction" -> handleTransaction(request, response);
+        }
     }
     
     protected void handleTransaction(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String type = request.getParameter("type");
+        String type = request.getParameter("transaction_type");
         String amtStr = request.getParameter("amt");
-        String uname = (String) request.getSession().getAttribute("user");
+        String desc = request.getParameter("description");
+        
+        // String uname = (String) request.getSession().getAttribute("user");
+        int uid = (int) request.getSession().getAttribute("uid");
         
         // some error checks
-        if (uname == null) {
+        if (uid == -1) {
             response.sendRedirect("index.html");
             return;
         }
         
-        if (amtStr == null || type == null) {
+        if (amtStr == null || type == null || desc == null) {
             response.sendRedirect("home.html");
             return;
         }
+        
         
         double amt = Double.parseDouble(amtStr);
         
         try (Connection conn = DBUtil.getConnection()) {
             System.out.println("SUCCESS: Connected to MySQL database!");
+           
+            String query = "INSERT INTO transactions (uid, transactions_type, amt, description, date) VALUES (?, ?, ?, ?, ?)";
             
-            String userQuery = "SELECT uid FROM users WHERE name = ?";
-            String query = "INSERT INTO transactions (uid, transaction_type, amt) VALUES (?, ?, ?)";
             
             
-            // get uid
-            try (PreparedStatement a = conn.prepareStatement(userQuery)) {
-                a.setString(1, uname);
-                ResultSet rs = a.executeQuery();
-                
-                if (!rs.next()) {
-                    response.sendRedirect("index.html");
-                    return;
-                }
-                
-                int uid = rs.getInt("uid");
-                
-                
-                try (PreparedStatement s = conn.prepareStatement(query)) {
-                    s.setInt(1, uid);
-                    s.setString(2, type);
-                    s.setDouble(3, amt);
-                    s.executeUpdate();
-                } catch (Exception e) {
-                    e.printStackTrace(); // prints to Tomcat log
-                    response.setContentType("text/plain");
-                    response.getWriter().println("SERVER ERROR:\n" + e.toString());
-                    return;
-                }
-            }   catch (Exception e) {
-                    e.printStackTrace(); // prints to Tomcat log
-                    response.setContentType("text/plain");
-                    response.getWriter().println("SERVER ERROR:\n" + e.toString());
-                    return;
+            try (PreparedStatement s = conn.prepareStatement(query)) {
+                s.setInt(1, uid);
+                s.setString(2, type);
+                s.setDouble(3, amt);
+                s.setString(4, desc);
+                s.setObject(5, LocalDateTime.now());
+
+                s.executeUpdate();
+
+            } catch (Exception e) {
+                e.printStackTrace(); // prints to Tomcat log
+                response.setContentType("text/plain");
+                response.getWriter().println("SERVER ERROR:\n" + e.toString());
+                return;
             }
-            
-            response.sendRedirect("home.html");
-            
-        } catch (Exception e) {
-            throw new ServletException("FAILED TO CONNECT TO DATABASE\n" + e.getMessage(), e);
+        }   catch (Exception e) {
+                e.printStackTrace(); // prints to Tomcat log
+                response.setContentType("text/plain");
+                response.getWriter().println("SERVER ERROR:\n" + e.toString());
+                return;
         }
+
+            response.sendRedirect("home.html");
     }
     
 
