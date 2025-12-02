@@ -8,9 +8,13 @@ name VARCHAR(50),
 pwd VARCHAR(50)
 );
 
-CREATE TABLE transactions (
-tid INT PRIMARY KEY AUTO_INCREMENT,
-uid INT NOT NULL,
-transactions_type ENUM('income', 'expenses') NOT NULL,
-FOREIGN KEY (uid) REFERENCES users(uid)
+
+create table transactions (
+tid int primary key auto_increment,
+uid int not null,
+transactions_type enum('income', 'expenses') not null,
+amt double,
+description TEXT,
+date datetime, 
+foreign key (uid) references users(uid)
 );
