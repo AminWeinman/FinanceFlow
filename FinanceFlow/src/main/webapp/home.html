@@ -1,56 +1,100 @@
 
+
 <!DOCTYPE html>
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Html.html to edit this template
--->
-
-
 <html>
     <head>
-        <title>FinanceFlow User Homepage</title>
+        <title>FinanceFlow Dashboard</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="assets/style.css">
     </head>
     <body>
-        <h1>Welcome!</h1>
-        <p>Below are two forms for inserting a new income or expense!</p>
-        <div>
+        <header>
+            <h1>FinanceFlow</h1>
+            <p>Welcome to your personal finance dashboard!</p>
+        </header>
+        <div class="container">
+            <h2>Add Transaction</h2>
             <form action="DataServlet" method="post">
                 <input type="hidden" name="call" value="addTransaction">
-                <h3>Input Transaction</h3>
                 <label for="amt">Amount:</label>
                 <input type="number" step="0.01" name="amt" id="amt" required>
-
                 <label for="desc">Description:</label>
                 <input type="text" name="description" id="desc" required>
-
                 <label for="type">Transaction Type:</label>
                 <select name="transaction_type" id="type">
                     <option value="income">Income</option>
                     <option value="expenses">Expense</option>
                 </select>
-
-                <button type="submit">Submit</button>
+                <button type="submit">Add Transaction</button>
             </form>
-            
-            <p>Total Income: $<span id="totalIncome">Loading...</span></p>
-            
-            <script>
-                window.addEventListener('load', () => {
-                    fetch('DataServlet')
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById('totalIncome').textContent = data.totalIncome;
-                        })
-                        .catch(err => {
-                            console.error('Error fetching total income:', err);
-                            document.getElementById('totalIncome').textContent = 'Error';
-                        });
-                });
-                    
-            </script>
 
+            <div class="chart-container">
+                <h3>Spending Overview</h3>
+                <canvas id="spendingChart" width="600" height="300"></canvas>
+            </div>
+
+            <h3>Transactions</h3>
+            <table class="table" id="transactionsTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Transactions will be loaded here -->
+                </tbody>
+            </table>
+
+            <div>
+                <strong>Total Income:</strong> $<span id="totalIncome">Loading...</span><br>
+                <strong>Total Expenses:</strong> $<span id="totalExpenses">Loading...</span>
+            </div>
         </div>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Fetch summary data
+            window.addEventListener('load', () => {
+                fetch('DataServlet')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('totalIncome').textContent = data.totalIncome;
+                        document.getElementById('totalExpenses').textContent = data.totalExpenses;
+                        // Render chart
+                        const ctx = document.getElementById('spendingChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Income', 'Expenses'],
+                                datasets: [{
+                                    data: [data.totalIncome, data.totalExpenses],
+                                    backgroundColor: ['#2d6cdf', '#ff6384']
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: { position: 'bottom' }
+                                }
+                            }
+                        });
+                        // Render transactions table
+                        const tbody = document.getElementById('transactionsTable').querySelector('tbody');
+                        tbody.innerHTML = '';
+                        (data.transactions || []).forEach(tx => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${tx.date || ''}</td><td>${tx.transaction_type}</td><td>$${tx.amt}</td><td>${tx.description}</td>`;
+                            tbody.appendChild(tr);
+                        });
+                    })
+                    .catch(err => {
+                        document.getElementById('totalIncome').textContent = 'Error';
+                        document.getElementById('totalExpenses').textContent = 'Error';
+                    });
+            });
+        </script>
     </body>
 </html>

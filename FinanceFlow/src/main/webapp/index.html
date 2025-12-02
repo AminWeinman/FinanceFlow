@@ -1,19 +1,28 @@
+
 <!DOCTYPE html>
 <html>
     <head>
-        <title>FinanceFlow Login Page</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>FinanceFlow Login</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="assets/style.css">
     </head>
     <body>
-        <h1>Hello! Please Login!</h1>
-        <div>
-            <form action="LoginServlet" method="post"> 
-                Username: <input type="text" name="uname"/><br>
-                Password: <input type="password" name="pwd"/><br>
-                <input type="submit" value="Submit">
+        <header>
+            <h1>FinanceFlow</h1>
+            <p>Personal Finance Management</p>
+        </header>
+        <div class="container">
+            <h2>Login to Your Account</h2>
+            <form action="LoginServlet" method="post">
+                <label for="uname">Username:</label>
+                <input type="text" name="uname" id="uname" required><br>
+                <label for="pwd">Password:</label>
+                <input type="password" name="pwd" id="pwd" required><br>
+                <input type="submit" value="Login">
             </form>
-        </div>
-        <div>
+            <hr>
+            <h3>New to FinanceFlow?</h3>
             <form action="RegisterServlet" method="get">
                 <input type="submit" value="Register">
             </form>
