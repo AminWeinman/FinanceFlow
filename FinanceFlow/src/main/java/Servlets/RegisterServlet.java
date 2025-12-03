@@ -42,6 +42,9 @@ public class RegisterServlet extends HttpServlet {
             out.println("<html>");
             out.println("<head>");
             out.println("<title>FinanceFlow User Registration</title>");
+            out.println("<meta charset=\"UTF-8\">");
+            out.println("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
+            out.println("<link rel=\"stylesheet\" href=\"assets/style.css\">");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>FinanceFlow User Registration</h1>");
@@ -56,6 +59,7 @@ public class RegisterServlet extends HttpServlet {
             out.println("</html>");
         }
     }
+
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
@@ -118,3 +122,4 @@ public class RegisterServlet extends HttpServlet {
     }// </editor-fold>
 
 }
+
