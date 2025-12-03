@@ -13,11 +13,16 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -64,12 +69,26 @@ public class DataServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false); // don’t create new session
+        if (session == null || session.getAttribute("uid") == null) {
+            // User not logged in
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+            response.getWriter().write("{\"error\":\"Not logged in\"}");
+            return;
+        }
+        
         int uid = (int) request.getSession().getAttribute("uid");
         double totalIncome = 0.0;
+        double totalExpenses = 0.0;
+        List<Map<String, Object>> transactions = new ArrayList<>();
         
-        String sql = "SELECT SUM(amt) AS total_income FROM transactions WHERE uid = ? and transactions_type = 'income'";
+        String incomeQuery = "SELECT SUM(amt) AS total_income FROM transactions WHERE uid = ? and transactions_type = 'income'";
+        String expensesQuery = "SELECT SUM(amt) AS total_expenses FROM transactions WHERE uid = ? and transactions_type = 'expenses'";
+        String transactionsQuery = "SELECT date, transactions_type, amt, description FROM transactions WHERE uid = ? ORDER BY date DESC";
         try (Connection conn = DBUtil.getConnection()) {
-            try (PreparedStatement s = conn.prepareStatement(sql)) {
+            // get income
+            try (PreparedStatement s = conn.prepareStatement(incomeQuery)) {
                 s.setInt(1, uid);
                 ResultSet rs = s.executeQuery();
                 
@@ -79,12 +98,60 @@ public class DataServlet extends HttpServlet {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            // get expenses
+            try (PreparedStatement a = conn.prepareStatement(expensesQuery)) {
+                a.setInt(1, uid);
+                ResultSet rs = a.executeQuery();
+                
+                if (rs.next()) {
+                    totalExpenses = rs.getDouble("total_expenses");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            // get transactions
+            
+            try (PreparedStatement b = conn.prepareStatement(transactionsQuery)) {
+                b.setInt(1, uid);
+                ResultSet rs = b.executeQuery();
+                
+                while(rs.next()) {
+                    Map<String, Object> tx = new HashMap<>();
+                    tx.put("date", rs.getString("date"));
+                    tx.put("transaction_type", rs.getString("transactions_type"));
+                    tx.put("amt", rs.getDouble("amt"));
+                    tx.put("description", rs.getString("description"));
+                    transactions.add(tx);
+                }
+            }
         } catch (Exception ex) {
             System.getLogger(DataServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
         
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"totalIncome\": " + totalIncome + "}");
+        
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"totalIncome\":").append(totalIncome).append(",");
+        json.append("\"totalExpenses\":").append(totalExpenses).append(",");
+        json.append("\"transactions\":[");
+
+        for (int i = 0; i < transactions.size(); i++) {
+            Map<String, Object> tx = transactions.get(i);
+            json.append("{")
+                .append("\"date\":\"").append(tx.get("date")).append("\",")
+                .append("\"transaction_type\":\"").append(tx.get("transaction_type")).append("\",")
+                .append("\"amt\":").append(tx.get("amt")).append(",")
+                .append("\"description\":\"").append(tx.get("description")).append("\"")
+                .append("}");
+            if (i < transactions.size() - 1) json.append(",");
+        }
+
+        json.append("]}");
+
+        response.getWriter().write(json.toString());
+        
+        //response.getWriter().write("{\"totalIncome\": " + totalIncome + ", \"totalExpenses\": " + totalExpenses + "}");
     }
 
     /**
